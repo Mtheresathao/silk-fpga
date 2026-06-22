@@ -28,7 +28,9 @@ module top_module (
 
   reg game_over_d;
 
-
+  // =========================
+  // FSM game
+  // =========================
   localparam S_IDLE      = 2'd0;
   localparam S_RUN       = 2'd1;
   localparam S_GAME_OVER = 2'd2;
@@ -38,7 +40,7 @@ module top_module (
   wire rst = ~rst_n;
   reg jump_req;
   wire jump_pulse = frame_tick && jump_req;
-
+  
   always @(posedge clk)
   begin
     if (rst)
@@ -54,10 +56,12 @@ module top_module (
 
   wire [1:0] red, green, blue;
 
+ 
   assign r = red;
   assign g = green;
   assign b = blue;
   assign video_active = visible;
+
 
   // =========================
   // Tham số màn hình / vật thể
@@ -106,7 +110,7 @@ module top_module (
     begin
       jump_btn_d <= KEY[0];
 
-      if (KEY[0] && !jump_btn_d) //bắt cạnh lên // xoa dau !
+      if (KEY[0] && !jump_btn_d)
         jump_req <= 1'b1;
       else if (frame_tick)
         jump_req <= 1'b0;
@@ -219,7 +223,7 @@ module top_module (
             );
 
   // =========================
-  // FSM game
+  // Update state game theo frame
   // =========================
   always @(posedge clk)
   begin
@@ -244,7 +248,7 @@ module top_module (
         begin
           if (hit)
           begin
-            state <= S_GAME_OVER;//sua S_RUN thanh S_GAME_OVER
+            state <= S_RUN;
           end
           else
           begin
@@ -420,7 +424,7 @@ endmodule
 
 
 // ==========================================
-// module collision
+// Collision: AABB đơn giản
 // ==========================================
 module collision #(
     parameter DINO_W = 32,
@@ -454,9 +458,8 @@ module collision #(
 endmodule
 
 
-
 // ==========================================
-// module renderer
+// Renderer: nền trắng, dino bitmap, cactus bitmap, KO khi game over
 // ==========================================
 module renderer #(
     parameter GROUND_Y = 440,
@@ -511,7 +514,7 @@ module renderer #(
        (pixel_x >= dino_x) && (pixel_x < dino_x + DINO_W) &&
        (pixel_y >= dino_y) && (pixel_y < dino_y + DINO_H);
 
-  wire [9:0] local_x_full = pixel_x - dino_x;
+  wire [9:0] local_x_full = pixel_x + dino_x;
   wire [9:0] local_y_full = pixel_y - dino_y;
   wire [4:0] local_x = local_x_full[4:0];
   wire [4:0] local_y = local_y_full[4:0];
@@ -931,7 +934,7 @@ module renderer #(
 
 endmodule
 // ==========================================
-// module hvsync_generator
+// VGA HVSYNC Generator (640x480 @ 60Hz, 25MHz Clock)
 // ==========================================
 module hvsync_generator (
     input  wire clk,
@@ -975,14 +978,14 @@ module hvsync_generator (
         end
     end
 
-    
+    // Tạo xung đồng bộ (Active Low chuẩn cho các DAC màn hình)
     assign hsync = ~(h_count >= (H_DISPLAY + H_FRONT_PORCH) && h_count < (H_DISPLAY + H_FRONT_PORCH + H_SYNC_PULSE));
     assign vsync = ~(v_count >= (V_DISPLAY + V_FRONT_PORCH) && v_count < (V_DISPLAY + V_FRONT_PORCH + V_SYNC_PULSE));
     
-    
+    // Tín hiệu Visible (chỉ vẽ hình khi đang ở vùng hiển thị)
     assign display_on = (h_count < H_DISPLAY) && (v_count < V_DISPLAY);
     
-    
+    // Đẩy tọa độ ra cho Renderer xử lý hình ảnh
     assign hpos = h_count;
     assign vpos = v_count;
     
