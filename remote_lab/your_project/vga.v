@@ -1,7 +1,7 @@
 `default_nettype none
 `define COLOR_CYAN 3'd5
 
-module thao (
+module top_module (
     input  wire       clk,
     input  wire       rst_n,
     input  wire [7:0] SW,       // 8 switch control
