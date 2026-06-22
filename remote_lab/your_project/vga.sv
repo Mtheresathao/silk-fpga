@@ -244,7 +244,7 @@ module top_module (
         begin
           if (hit)
           begin
-            state <= S_RUN;
+            state <= S_GAME_OVER;//sua S_RUN thanh S_GAME_OVER
           end
           else
           begin
